@@ -1,0 +1,2 @@
+jlox:
+	javac main.java
