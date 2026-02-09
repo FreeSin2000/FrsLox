@@ -1,7 +1,30 @@
 JLOX_PATH = com/craftinginterpreters/lox
+TOOL_PATH = com/craftinginterpreters/tool
+JLOX_SRC = $(wildcard $(JLOX_PATH)/*.java)
+JLOX_BUILD_DIR = ./build
 
-jlox:	${JLOX_PATH}/Lox.java ${JLOX_PATH}/TokenType.java ${JLOX_PATH}/Token.java ${JLOX_PATH}/Scanner.java
-	javac -d classes ${JLOX_PATH}/*.java
+jlox:	 generate_ast $(JLOX_SRC)
+	javac -d $(JLOX_BUILD_DIR) $(JLOX_SRC)
+
+ast_printer:	jlox
+	java -cp $(JLOX_BUILD_DIR) $(JLOX_PATH)/AstPrinter
+
+rpn_printer:	jlox
+	java -cp $(JLOX_BUILD_DIR) $(JLOX_PATH)/RPNPrinter
+
+all:	jlox
+
+clean:
+	rm $(JLOX_BUILD_DIR)/*.class
+
+.PHONY: run run_file generate_ast
 
 run:	jlox
-	java ${JLOX_PATH}/Lox
+	java -cp $(JLOX_BUILD_DIR) $(JLOX_PATH)/Lox
+
+run_file:	jlox
+	java -cp $(JLOX_BUILD_DIR) $(JLOX_PATH)/Lox ./test.jlox
+
+generate_ast:	${TOOL_PATH}/GenerateAst.java
+# 	javac ${TOOL_PATH}/GenerateAst.java
+	java ${TOOL_PATH}/GenerateAst.java ${JLOX_PATH}
