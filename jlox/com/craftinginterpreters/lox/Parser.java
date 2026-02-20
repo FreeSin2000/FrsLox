@@ -71,6 +71,7 @@ class Parser {
     }
 
     private Stmt statement() {
+
         if (match(BREAK)) {
             if (loopDepth <= 0)
                 throw error(peek(), "Expect 'break' in a loop.");
@@ -83,6 +84,8 @@ class Parser {
             return ifStatement();
         if (match(PRINT))
             return printStatement();
+        if (match(RETURN))
+            return returnStatement();
         if (match(WHILE))
             return whileStatement();
         if (match(LEFT_BRACE))
@@ -159,6 +162,17 @@ class Parser {
         return new Stmt.Print(value);
     }
 
+    private Stmt returnStatement() {
+        Token keyword = previous();
+        Expr value = null;
+        if (!check(SEMICOLON)) {
+            value = expression();
+        }
+
+        consume(SEMICOLON, "Expect ';' after return value.");
+        return new Stmt.Return(keyword, value);
+    }
+
     private Stmt varDeclaration() {
         Token name = consume(IDENTIFIER, "Expect variable name.");
 
@@ -190,6 +204,11 @@ class Parser {
 
     private Stmt.Function function(String kind) {
         Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
+        Expr.Lambda expr = finishLambda(kind);
+        return new Stmt.Function(name, expr.params, expr.body);
+    }
+
+    private Expr.Lambda finishLambda(String kind) {
         consume(LEFT_PAREN, "Expect '(' after " + kind + " name.");
         List<Token> parameters = new ArrayList<>();
         if (!check(RIGHT_PAREN)) {
@@ -208,7 +227,8 @@ class Parser {
         loopDepth = 0;
         try {
             List<Stmt> body = block();
-            return new Stmt.Function(name, parameters, body);
+            // return new Stmt.Function(name, parameters, body);
+            return new Expr.Lambda(parameters, body);
         } finally {
             loopDepth = prevLoopDepth;
         }
@@ -386,6 +406,8 @@ class Parser {
     }
 
     private Expr primary() {
+        if(match(FUN))
+            return finishLambda("lambda expression");
         if (match(FALSE))
             return new Expr.Literal(false);
         if (match(TRUE))
