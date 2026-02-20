@@ -58,8 +58,13 @@ class Parser {
 
     private Stmt declaration() {
         try {
+
+            if (check(FUN) && checkNext(LEFT_PAREN))
+                return expressionStatement();
+
             if (match(FUN))
                 return function("function");
+
             if (match(VAR))
                 return varDeclaration();
 
@@ -406,7 +411,7 @@ class Parser {
     }
 
     private Expr primary() {
-        if(match(FUN))
+        if (match(FUN))
             return finishLambda("lambda expression");
         if (match(FALSE))
             return new Expr.Literal(false);
@@ -463,6 +468,14 @@ class Parser {
         return peek().type == type;
     }
 
+    private boolean checkNext(TokenType type) {
+        if (isAtEnd())
+            return false;
+        if (tokens.get(current + 1).type == EOF)
+            return false;
+        return tokens.get(current + 1).type == type;
+    }
+
     private Token advance() {
         if (!isAtEnd())
             current++;
@@ -475,6 +488,12 @@ class Parser {
 
     private Token peek() {
         return tokens.get(current);
+    }
+
+    private Token peekNext() {
+        if (isAtEnd())
+            return peek();
+        return tokens.get(current + 1);
     }
 
     private Token previous() {
