@@ -5,3 +5,74 @@
     /*
 */
 */
+/*
+
+print "one";
+print true;
+print 2 + 1;
+
+var a = 1;
+var b = 2;
+print a + b;
+
+var a = "global a";
+var b = "global b";
+var c = "global c";
+{
+  var a = "outer a";
+  var b = "outer b";
+  {
+    var a = "inner a";
+    print a;
+    print b;
+    print c;
+  }
+  print a;
+  print b;
+  print c;
+}
+print a;
+print b;
+print c;*/
+
+var a = 1;
+{
+  var a = a + 2;
+  print a;
+}
+
+
+print a;
+a + 3;
+if (a > 0) {
+  print "a > 0";
+}
+
+var i = 0;
+
+while (true) {
+  print i;
+  i = i + 1;
+  if (i > 9) break;
+}
+
+print "Fib";
+var a = 0;
+var temp;
+
+for (var b = 1; a < 10000; b = temp + b) {
+  print a;
+  if (a > 250) break;
+  temp = a;
+  a = b;
+  
+}
+
+fun sayHi(first, last) {
+  for(var i = 1; i < 10; i = i + 1) {
+    print "Hi, " + first + " " + last + i + "!";
+    if (i >= 5) break;
+  }
+}
+
+sayHi(("Fxxking", "Dear"), "Reader");

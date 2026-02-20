@@ -1,5 +1,7 @@
 package com.craftinginterpreters.lox;
 
+import com.craftinginterpreters.lox.Expr.Variable;
+
 class RPNPrinter implements Expr.Visitor<String> {
   String print(Expr expr) {
     return expr.accept(this);
@@ -28,6 +30,11 @@ class RPNPrinter implements Expr.Visitor<String> {
       return "nil";
     return expr.value.toString();
   }
+  
+  @Override
+  public String visitLogicalExpr(Expr.Logical expr) {
+    return compose_rpn(expr.operator.lexeme, expr.left, expr.right);
+  }
 
   @Override
   public String visitUnaryExpr(Expr.Unary expr) {
@@ -38,6 +45,17 @@ class RPNPrinter implements Expr.Visitor<String> {
         return compose_rpn(expr.operator.lexeme, expr.right);
     }
 
+  }
+
+  @Override
+  public String visitVariableExpr(Variable expr) {
+    return expr.name.lexeme;
+  }
+
+  @Override
+  public String visitAssignExpr(Expr.Assign expr) {
+
+    return compose_rpn(expr.name.lexeme, expr.value);
   }
 
   private String compose_rpn(String name, Expr... exprs) {

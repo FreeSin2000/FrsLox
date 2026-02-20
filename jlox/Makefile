@@ -1,7 +1,12 @@
 JLOX_PATH = com/craftinginterpreters/lox
 TOOL_PATH = com/craftinginterpreters/tool
-JLOX_SRC = $(wildcard $(JLOX_PATH)/*.java)
+ALL_SRC = $(wildcard $(JLOX_PATH)/*.java)
 JLOX_BUILD_DIR = ./build
+
+PRINTER_SRC = $(JLOX_PATH)/AstPrinter.java \
+			  $(JLOX_PATH)/RPNPrinter.java
+
+JLOX_SRC = $(filter-out $(PRINTER_SRC), $(ALL_SRC))
 
 jlox:	 generate_ast $(JLOX_SRC)
 	javac -d $(JLOX_BUILD_DIR) $(JLOX_SRC)

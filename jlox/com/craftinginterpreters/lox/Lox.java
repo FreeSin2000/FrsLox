@@ -12,6 +12,8 @@ public class Lox {
 
     static boolean hadError = false;
     static boolean hadRuntimeError = false;
+    static boolean isREPL = false;
+    static boolean suppressError = false;
 
     private static final Interpreter interpreter = new Interpreter();
 
@@ -39,6 +41,7 @@ public class Lox {
     private static void runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
+        isREPL = true;
 
         for (;;) {
             System.out.print("> ");
@@ -55,14 +58,23 @@ public class Lox {
         List<Token> tokens = scanner.scanTokens();
 
         Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        Expr expr = null;
+        if (isREPL) {
+            suppressError = true;
+            expr = parser.parseREPL();
+            suppressError = false;
+            if (expr != null && !hadError) {
+                interpreter.interpret(expr);
+            }
+        }
 
-        // Stop if there was a syntax error.
+        hadError = false;
+        List<Stmt> statements;
+        statements = parser.parse();
         if (hadError)
             return;
+        interpreter.interpret(statements);
 
-        System.out.println(new AstPrinter().print(expression));
-        interpreter.interpret(expression);
     }
 
     static void error(int line, String message) {
@@ -71,8 +83,9 @@ public class Lox {
 
     private static void report(int line, String where,
             String message) {
-        System.err.println(
-                "[line " + line + "] Error" + where + ": " + message);
+        if (!suppressError)
+            System.err.println(
+                    "[line " + line + "] Error" + where + ": " + message);
         hadError = true;
     }
 
