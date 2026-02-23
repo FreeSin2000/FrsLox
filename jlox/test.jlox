@@ -36,10 +36,6 @@ print b;
 print c;*/
 
 var a = 1;
-{
-  var a = a + 2;
-  print a;
-}
 
 
 print a;
@@ -114,3 +110,23 @@ thrice(fun (a) {
 // "3".
 
 print fun (x) { return x * x;} (5);
+
+fun scope(a) {
+  var b = "local";
+}
+
+fun bad() {
+  var a = "first";
+  var b = "second";
+}
+
+for (var i = 0; i < 11; i = i + 1) {
+  fun (x) {
+    for (var i = 1; i < x; i = i + 1) {
+      print i;
+    }
+  } (2);
+  print i;
+}
+
+break;

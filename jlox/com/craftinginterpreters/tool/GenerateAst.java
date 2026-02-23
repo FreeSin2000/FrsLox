@@ -36,7 +36,7 @@ public class GenerateAst {
         "Var        : Token name, Expr initializer",
         "Block      : List<Stmt> statements",
         "While      : Expr condition, Stmt body",
-        "Break      : int loopDepth"));
+        "Break      : Token keyword"));
   }
 
   private static void defineAst(

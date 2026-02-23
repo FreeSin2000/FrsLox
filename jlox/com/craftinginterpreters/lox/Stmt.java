@@ -125,8 +125,8 @@ abstract class Stmt {
     final Stmt body;
   }
   static class Break extends Stmt {
-    Break(int loopDepth) {
-      this.loopDepth = loopDepth;
+    Break(Token keyword) {
+      this.keyword = keyword;
     }
 
     @Override
@@ -134,7 +134,7 @@ abstract class Stmt {
       return visitor.visitBreakStmt(this);
     }
 
-    final int loopDepth;
+    final Token keyword;
   }
 
   abstract <R> R accept(Visitor<R> visitor);
