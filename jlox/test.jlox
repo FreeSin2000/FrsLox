@@ -113,11 +113,13 @@ print fun (x) { return x * x;} (5);
 
 fun scope(a) {
   var b = "local";
+  print b;
 }
 
 fun bad() {
   var a = "first";
   var b = "second";
+  print a == b;
 }
 
 for (var i = 0; i < 11; i = i + 1) {
@@ -129,4 +131,4 @@ for (var i = 0; i < 11; i = i + 1) {
   print i;
 }
 
-break;
+// break;
