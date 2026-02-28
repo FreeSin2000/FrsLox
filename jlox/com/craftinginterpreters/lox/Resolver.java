@@ -17,7 +17,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private enum FunctionType {
         NONE,
-        FUNCTION
+        FUNCTION,
+        METHOD
     }
 
     private enum LoopType {
@@ -28,12 +29,15 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private enum VarType {
         FUN,
         VAR,
-        PARAM
+        PARAM,
+        CLASS,
+        THIS
     }
 
     private enum AccessType {
         READ,
-        WRITE
+        WRITE,
+        THIS
     }
 
     private class Variable {
@@ -66,12 +70,23 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void checkLocalUsed() {
+        if (scopes.isEmpty())
+            return;
         for (Map.Entry<String, Variable> entry : scopes.peek().entrySet()) {
-            Variable cur_var = entry.getValue();
-            if (cur_var.type != VarType.PARAM && !cur_var.used) {
-                Lox.error(cur_var.name, 
-                    "Unused variable.");
-            }
+            Variable curVar = entry.getValue();
+            if (curVar.used)
+                continue;
+            if (curVar.type == VarType.PARAM || curVar.type == VarType.THIS)
+                continue;
+
+            String message = switch (curVar.type) {
+                case VAR -> "Local variable '" + entry.getKey() + "' is never used.";
+                case FUN -> "Local function '" + entry.getKey() + "' is never called.";
+                case CLASS -> "Local class '" + entry.getKey() + "' is never used.";
+                // case PARAM -> "Function parameter '" + entry.getKey() + "' is never used.";
+                default -> "Unused entity.";
+            };
+            Lox.error(curVar.name, message);
         }
     }
 
@@ -111,6 +126,24 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         beginScope();
         resolve(stmt.statements);
         endScope();
+        return null;
+    }
+
+    @Override
+    public Void visitClassStmt(Stmt.Class stmt) {
+        declare(stmt.name, VarType.CLASS);
+        define(stmt.name);
+
+        beginScope();
+        scopes.peek().put("this", new Variable(new Token(TokenType.THIS, "this", null, stmt.name.line), VarType.THIS));
+
+        for (Stmt.Function method : stmt.methods) {
+            FunctionType declaration = FunctionType.METHOD;
+            resolveFunction(method, declaration);
+        }
+
+        endScope();
+
         return null;
     }
 
@@ -224,6 +257,12 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitGetExpr(Expr.Get expr) {
+        resolve(expr.object);
+        return null;
+    }
+
+    @Override
     public Void visitGroupingExpr(Expr.Grouping expr) {
         resolve(expr.expression);
         return null;
@@ -238,6 +277,19 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitLogicalExpr(Expr.Logical expr) {
         resolve(expr.left);
         resolve(expr.right);
+        return null;
+    }
+
+    @Override
+    public Void visitSetExpr(Expr.Set expr) {
+        resolve(expr.value);
+        resolve(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitThisExpr(Expr.This expr) {
+        resolveLocal(expr, expr.keyword, AccessType.THIS);
         return null;
     }
 

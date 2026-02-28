@@ -132,3 +132,21 @@ for (var i = 0; i < 11; i = i + 1) {
 }
 
 // break;
+class DevonshireCream {
+  serveOn() {
+    return "Scones";
+  }
+}
+
+print DevonshireCream; // Prints "DevonshireCream".
+
+class Bagel {}
+Bagel();
+
+class Bacon {
+  eat() {
+    print "Crunch crunch crunch!";
+  }
+}
+
+Bacon().eat(); // Prints "Crunch crunch crunch!".
