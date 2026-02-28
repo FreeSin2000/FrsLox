@@ -1,0 +1,30 @@
+class Bacon {
+  eat() {
+    print "Crunch crunch crunch!";
+  }
+  init(x) {
+    this.x = x;
+  }
+  disp() {
+    print this.x;
+  }
+  inc() {
+    this.x = this.x + 1;
+  }
+}
+
+fun test() {
+  var b = Bacon(); // 声明并使用 b
+  b.eat();         // 再次使用 b
+  b.init(114);
+  print b.x;
+  b.x = 233;
+  b.disp();
+  b.inc();
+  b.disp();
+  var f = b.inc;
+  f();
+  b.disp();
+}
+
+test();

@@ -1,0 +1,152 @@
+
+// line comments
+
+/*
+    /*
+*/
+*/
+/*
+
+print "one";
+print true;
+print 2 + 1;
+
+var a = 1;
+var b = 2;
+print a + b;
+
+var a = "global a";
+var b = "global b";
+var c = "global c";
+{
+  var a = "outer a";
+  var b = "outer b";
+  {
+    var a = "inner a";
+    print a;
+    print b;
+    print c;
+  }
+  print a;
+  print b;
+  print c;
+}
+print a;
+print b;
+print c;*/
+
+var a = 1;
+
+
+print a;
+a + 3;
+if (a > 0) {
+  print "a > 0";
+}
+
+var i = 0;
+
+while (true) {
+  print i;
+  i = i + 1;
+  if (i > 9) break;
+}
+
+print "Fib";
+var a = 0;
+var temp;
+
+for (var b = 1; a < 10000; b = temp + b) {
+  print a;
+  if (a > 250) break;
+  temp = a;
+  a = b;
+  
+}
+
+fun sayHi(first, last) {
+  for(var i = 1; i < 10; i = i + 1) {
+    print "Hi, " + first + " " + last + i + "!";
+    if (i >= 5) break;
+  }
+}
+
+sayHi(("Fxxking", "Dear"), "Reader");
+
+fun fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 2) + fib(n - 1);
+}
+
+for (var i = 0; i < 20; i = i + 1) {
+  print fib(i);
+}
+
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
+  }
+
+  return count;
+}
+
+var counter = makeCounter();
+counter(); // "1".
+counter(); // "2".
+
+fun thrice(fn) {
+  for (var i = 1; i <= 3; i = i + 1) {
+    fn(i);
+  }
+}
+
+thrice(fun (a) {
+  print a;
+});
+// "1".
+// "2".
+// "3".
+
+print fun (x) { return x * x;} (5);
+
+fun scope(a) {
+  var b = "local";
+  print b;
+}
+
+fun bad() {
+  var a = "first";
+  var b = "second";
+  print a == b;
+}
+
+for (var i = 0; i < 11; i = i + 1) {
+  fun (x) {
+    for (var i = 1; i < x; i = i + 1) {
+      print i;
+    }
+  } (2);
+  print i;
+}
+
+// break;
+class DevonshireCream {
+  serveOn() {
+    return "Scones";
+  }
+}
+
+print DevonshireCream; // Prints "DevonshireCream".
+
+class Bagel {}
+Bagel();
+
+class Bacon {
+  eat() {
+    print "Crunch crunch crunch!";
+  }
+}
+
+Bacon().eat(); // Prints "Crunch crunch crunch!".
