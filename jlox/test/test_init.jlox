@@ -1,0 +1,13 @@
+class MyClass {
+    disp() {
+        print "My age is " + this.age + "," + " my grade is " + this.grade;
+    }
+    init(age, grade) {
+        this.age = age;
+        this.grade = grade;
+    }
+}
+
+var myObj = MyClass(114, 514);
+
+myObj.disp();
