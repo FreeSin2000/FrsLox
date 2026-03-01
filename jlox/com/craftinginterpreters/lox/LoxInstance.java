@@ -3,6 +3,8 @@ package com.craftinginterpreters.lox;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.craftinginterpreters.lox.LoxFunction.FunctionKind;
+
 class LoxInstance {
   private LoxClass klass;
   private final Map<String, Object> fields = new HashMap<>();
@@ -17,7 +19,8 @@ class LoxInstance {
     }
 
     LoxFunction method = klass.findMethod(name.lexeme);
-    if (method != null) return method.bind(this);
+    if (method != null)
+      return method.bind(this);
 
     throw new RuntimeError(name,
         "Undefined property '" + name.lexeme + "'.");

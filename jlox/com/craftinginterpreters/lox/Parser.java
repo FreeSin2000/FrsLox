@@ -80,13 +80,25 @@ class Parser {
         consume(LEFT_BRACE, "Expect '{' before class body.");
 
         List<Stmt.Function> methods = new ArrayList<>();
+        List<Stmt.Function> staticMethods = new ArrayList<>();
+
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
-            methods.add(function("method"));
+            if (match(TokenType.CLASS)) {
+                staticMethods.add(function("method"));
+            } else {
+                if (peekNext().type == TokenType.LEFT_BRACE) {
+                    methods.add(function("getter"));
+                } else {
+                    methods.add(function("method"));
+                }
+
+            }
+
         }
 
         consume(RIGHT_BRACE, "Expect '}' after class body.");
 
-        return new Stmt.Class(name, methods);
+        return new Stmt.Class(name, methods, staticMethods);
     }
 
     private Stmt statement() {
@@ -218,13 +230,16 @@ class Parser {
     private Stmt.Function function(String kind) {
         Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
         Expr.Lambda expr = finishLambda(kind);
-        return new Stmt.Function(name, expr.params, expr.body);
+        return new Stmt.Function(name, expr.params, expr.body, kind.equals("getter"));
     }
 
     private Expr.Lambda finishLambda(String kind) {
-        consume(LEFT_PAREN, "Expect '(' after " + kind + " name.");
+        boolean isGetter = kind == "getter";
+        if (!isGetter)
+            consume(LEFT_PAREN, "Expect '(' after " + kind + " name.");
         List<Token> parameters = new ArrayList<>();
-        if (!check(RIGHT_PAREN)) {
+        
+        if (!isGetter && !check(RIGHT_PAREN)) {
             do {
                 if (parameters.size() >= 255) {
                     error(peek(), "Can't have more than 255 parameters.");
@@ -234,7 +249,8 @@ class Parser {
                         consume(IDENTIFIER, "Expect parameter name."));
             } while (match(COMMA));
         }
-        consume(RIGHT_PAREN, "Expect ')' after parameters.");
+        if (!isGetter)
+            consume(RIGHT_PAREN, "Expect ')' after parameters.");
         consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
         List<Stmt> body = block();
         // return new Stmt.Function(name, parameters, body);

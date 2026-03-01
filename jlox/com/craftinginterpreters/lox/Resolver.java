@@ -18,7 +18,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     private enum FunctionType {
         NONE,
         FUNCTION,
+        STATIC_METHOD,
         INITIALIZER,
+        GETTER,
         METHOD
     }
 
@@ -150,12 +152,22 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         for (Stmt.Function method : stmt.methods) {
             FunctionType declaration = FunctionType.METHOD;
             if (method.name.lexeme.equals("init")) {
+                if (method.isGetter)
+                    Lox.error(method.name, "Getters cannot be named 'init'.");
                 declaration = FunctionType.INITIALIZER;
             }
             resolveFunction(method, declaration);
         }
 
         endScope();
+
+        for (Stmt.Function method : stmt.staticMethods) {
+            FunctionType declaration = FunctionType.STATIC_METHOD;
+            if (method.name.lexeme.equals("init")) {
+                Lox.error(method.name, "Static methods cannot be named 'init'.");
+            }
+            resolveFunction(method, declaration);
+        }
         currentClass = enclosingClass;
         return null;
     }
@@ -251,7 +263,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitLambdaExpr(Expr.Lambda expr) {
-        resolveFunction(new Stmt.Function(null, expr.params, expr.body), FunctionType.FUNCTION);
+        resolveFunction(new Stmt.Function(null, expr.params, expr.body, false), FunctionType.FUNCTION);
         return null;
     }
 
@@ -310,6 +322,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             Lox.error(expr.keyword,
                     "Can't use 'this' outside of a class.");
             return null;
+        }
+        if (currentFunction == FunctionType.STATIC_METHOD) {
+            Lox.error(expr.keyword, "Cannot use 'this' in a static method.");
         }
         resolveLocal(expr, expr.keyword, AccessType.THIS);
         return null;

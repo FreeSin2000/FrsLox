@@ -5,11 +5,26 @@ import java.util.List;
 class LoxFunction implements LoxCallable {
     private final Stmt.Function declaration;
     private final Environment closure;
-    private final boolean isInitializer;
+    private final FunctionKind funcKind;
+    // private final boolean isInitializer;
+
+    public FunctionKind getFuncKind() {
+        return funcKind;
+    }
+    
+    public enum FunctionKind {
+        NONE,
+        FUNCTION,
+        STATIC_METHOD,
+        INITIALIZER,
+        GETTER,
+        LAMBDA,
+        METHOD
+    }
 
     LoxFunction(Stmt.Function declaration, Environment closure,
-            boolean isInitializer) {
-        this.isInitializer = isInitializer;
+            FunctionKind funcKind) {
+        this.funcKind = funcKind;
         this.closure = closure;
         this.declaration = declaration;
     }
@@ -18,7 +33,7 @@ class LoxFunction implements LoxCallable {
         Environment environment = new Environment(closure);
         environment.define("this", instance);
         return new LoxFunction(declaration, environment,
-                isInitializer);
+                funcKind);
     }
 
     @Override
@@ -32,11 +47,11 @@ class LoxFunction implements LoxCallable {
         try {
             interpreter.executeBlock(declaration.body, environment);
         } catch (Return returnValue) {
-            if (isInitializer)
+            if (funcKind == FunctionKind.INITIALIZER)
                 return closure.getAt(0, "this");
             return returnValue.value;
         }
-        if (isInitializer)
+        if (funcKind == FunctionKind.INITIALIZER)
             return closure.getAt(0, "this");
         return null;
     }

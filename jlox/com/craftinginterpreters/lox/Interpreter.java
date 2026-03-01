@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.craftinginterpreters.lox.LoxFunction.FunctionKind;
+
 class Interpreter implements Expr.Visitor<Object>,
         Stmt.Visitor<Void> {
 
@@ -222,12 +224,26 @@ class Interpreter implements Expr.Visitor<Object>,
 
         Map<String, LoxFunction> methods = new HashMap<>();
         for (Stmt.Function method : stmt.methods) {
+            LoxFunction.FunctionKind methodKind = FunctionKind.METHOD;
+            if (method.isGetter) methodKind = FunctionKind.GETTER;
+            if (method.name.lexeme.equals("init")) methodKind = FunctionKind.INITIALIZER;
+            
             LoxFunction function = new LoxFunction(method, environment,
-                    method.name.lexeme.equals("init"));
+                    methodKind);
             methods.put(method.name.lexeme, function);
         }
 
-        LoxClass klass = new LoxClass(stmt.name.lexeme, methods);
+        Map<String, LoxFunction> staticMethods = new HashMap<>();
+        for (Stmt.Function method : stmt.staticMethods) {
+            LoxFunction.FunctionKind methodKind = FunctionKind.METHOD;
+            if (method.isGetter) methodKind = FunctionKind.GETTER;
+            // if (method.name.lexeme.equals("init")) methodKind = FunctionKind.INITIALIZER;
+            LoxFunction function = new LoxFunction(method, environment,
+                    methodKind);
+            staticMethods.put(method.name.lexeme, function);
+        }
+        LoxClass metaKlass = new LoxClass(null, "meta_" + stmt.name.lexeme, staticMethods);
+        LoxClass klass = new LoxClass(metaKlass, stmt.name.lexeme, methods);
         environment.assign(stmt.name, klass);
         return null;
     }
@@ -241,7 +257,7 @@ class Interpreter implements Expr.Visitor<Object>,
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
         LoxFunction function = new LoxFunction(stmt, environment,
-                false);
+                FunctionKind.FUNCTION);
         environment.define(stmt.name.lexeme, function);
         return null;
     }
@@ -368,7 +384,7 @@ class Interpreter implements Expr.Visitor<Object>,
 
     @Override
     public Object visitLambdaExpr(Expr.Lambda expr) {
-        return new LoxFunction(new Stmt.Function(null, expr.params, expr.body), environment, false);
+        return new LoxFunction(new Stmt.Function(null, expr.params, expr.body, false), environment, FunctionKind.LAMBDA);
     }
 
     @Override
@@ -399,7 +415,11 @@ class Interpreter implements Expr.Visitor<Object>,
     public Object visitGetExpr(Expr.Get expr) {
         Object object = evaluate(expr.object);
         if (object instanceof LoxInstance) {
-            return ((LoxInstance) object).get(expr.name);
+            Object getObj = ((LoxInstance) object).get(expr.name);
+            if (getObj instanceof LoxFunction && ((LoxFunction)getObj).getFuncKind() == FunctionKind.GETTER) {
+                return ((LoxFunction)getObj).call(this, new ArrayList<>());
+            }
+            return getObj;
         }
 
         throw new RuntimeError(expr.name,

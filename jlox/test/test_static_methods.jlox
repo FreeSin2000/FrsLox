@@ -1,0 +1,26 @@
+class Math {
+  class square(n) {
+    return n * n;
+  }
+}
+
+print Math.square(3); // Prints "9".
+
+class Math2 {
+  class add(a, b) {
+    print a + b;
+  }
+}
+
+Math2.add(5, 10); // 应该打印 15，且不再报错“参数未定义”
+
+/*
+class Math3 {
+  class init() {
+
+  }
+  class visitThis() {
+    return this;
+  }
+}
+*/

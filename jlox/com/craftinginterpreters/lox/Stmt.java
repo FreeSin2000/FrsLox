@@ -28,10 +28,11 @@ abstract class Stmt {
     final Expr expression;
   }
   static class Function extends Stmt {
-    Function(Token name, List<Token> params, List<Stmt> body) {
+    Function(Token name, List<Token> params, List<Stmt> body, boolean isGetter) {
       this.name = name;
       this.params = params;
       this.body = body;
+      this.isGetter = isGetter;
     }
 
     @Override
@@ -42,6 +43,7 @@ abstract class Stmt {
     final Token name;
     final List<Token> params;
     final List<Stmt> body;
+    final boolean isGetter;
   }
   static class If extends Stmt {
     If(Expr condition, Stmt thenBranch, Stmt elseBranch) {
@@ -112,9 +114,10 @@ abstract class Stmt {
     final List<Stmt> statements;
   }
   static class Class extends Stmt {
-    Class(Token name, List<Stmt.Function> methods) {
+    Class(Token name, List<Stmt.Function> methods, List<Stmt.Function> staticMethods) {
       this.name = name;
       this.methods = methods;
+      this.staticMethods = staticMethods;
     }
 
     @Override
@@ -124,6 +127,7 @@ abstract class Stmt {
 
     final Token name;
     final List<Stmt.Function> methods;
+    final List<Stmt.Function> staticMethods;
   }
   static class While extends Stmt {
     While(Expr condition, Stmt body) {
