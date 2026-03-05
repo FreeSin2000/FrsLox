@@ -1,5 +1,7 @@
 package com.craftinginterpreters.lox;
 
+import static com.craftinginterpreters.lox.TokenType.CLASS;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +28,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private enum ClassType {
         NONE,
-        CLASS
+        CLASS,
+        SUBCLASS
     }
 
     private ClassType currentClass = ClassType.NONE;
@@ -41,6 +44,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         VAR,
         PARAM,
         CLASS,
+        SUPER,
         THIS
     }
 
@@ -86,7 +90,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             Variable curVar = entry.getValue();
             if (curVar.used)
                 continue;
-            if (curVar.type == VarType.PARAM || curVar.type == VarType.THIS)
+            if (curVar.type == VarType.PARAM || curVar.type == VarType.THIS || curVar.type == VarType.SUPER)
                 continue;
 
             String message = switch (curVar.type) {
@@ -146,6 +150,22 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         declare(stmt.name, VarType.CLASS);
         define(stmt.name);
 
+        if (stmt.superclass != null &&
+                stmt.name.lexeme.equals(stmt.superclass.name.lexeme)) {
+            Lox.error(stmt.superclass.name,
+                    "A class can't inherit from itself.");
+        }
+
+        if (stmt.superclass != null) {
+            currentClass = ClassType.SUBCLASS;
+            resolve(stmt.superclass);
+        }
+
+        if (stmt.superclass != null) {
+            beginScope();
+            scopes.peek().put("super", new Variable(stmt.superclass.name, VarType.SUPER));
+        }
+
         beginScope();
         scopes.peek().put("this", new Variable(new Token(TokenType.THIS, "this", null, stmt.name.line), VarType.THIS));
 
@@ -160,6 +180,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
 
         endScope();
+
+        if (stmt.superclass != null)
+            endScope();
 
         for (Stmt.Function method : stmt.staticMethods) {
             FunctionType declaration = FunctionType.STATIC_METHOD;
@@ -313,6 +336,19 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitSetExpr(Expr.Set expr) {
         resolve(expr.value);
         resolve(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitSuperExpr(Expr.Super expr) {
+        if (currentClass == ClassType.NONE) {
+            Lox.error(expr.keyword,
+                    "Can't use 'super' outside of a class.");
+        } else if (currentClass != ClassType.SUBCLASS) {
+            Lox.error(expr.keyword,
+                    "Can't use 'super' in a class with no superclass.");
+        }
+        resolveLocal(expr, expr.keyword, AccessType.READ);
         return null;
     }
 

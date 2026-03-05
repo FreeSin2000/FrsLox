@@ -3,11 +3,13 @@ package com.craftinginterpreters.lox;
 import java.util.List;
 import java.util.Map;
 
-class LoxClass  extends LoxInstance implements LoxCallable {
+class LoxClass extends LoxInstance implements LoxCallable {
     final String name;
     private final Map<String, LoxFunction> methods;
+    final LoxClass superclass;
 
-    LoxClass(LoxClass metaKlass, String name, Map<String, LoxFunction> methods) {
+    LoxClass(LoxClass metaKlass, String name, LoxClass superclass, Map<String, LoxFunction> methods) {
+        this.superclass = superclass;
         super(metaKlass);
         this.name = name;
         this.methods = methods;
@@ -17,7 +19,9 @@ class LoxClass  extends LoxInstance implements LoxCallable {
         if (methods.containsKey(name)) {
             return methods.get(name);
         }
-
+        if (superclass != null) {
+            return superclass.findMethod(name);
+        }
         return null;
     }
 
