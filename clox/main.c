@@ -1,44 +1,18 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <memory.h>
-#include <assert.h>
+#include "common.h"
+#include "chunk.h"
+#include "debug.h"
 
-typedef struct ListNode* ListNodePtr;
-typedef struct ListNode {
-    ListNodePtr next, prev;
-    char *val;
-} ListNode;
+int main(int argc, const char *argv[])
+{
+  Chunk chunk;
+  initChunk(&chunk);
 
-ListNode * insert(ListNode * l, const char * val) {
-    assert(l);
-    ListNode *cur_node = (ListNodePtr)malloc(sizeof(ListNode));
-    cur_node->val = (char *)malloc(strlen(val) + 1);
-    assert(cur_node);
-    strcpy(cur_node->val, val);
-    if(l->next == NULL) {
-        l->next = cur_node;
-        l->prev = cur_node;
-        cur_node->prev = l;
-        cur_node->next = l;
-    } else {
-        cur_node->prev = l->prev;
-        cur_node->next = l->next;
-        l->next->prev = cur_node;
-        l->next = cur_node;
-    }
-    return l;
-}
+  int constant = addConstant(&chunk, 1.2);
+  writeChunk(&chunk, OP_CONSTANT, 123);
+  writeChunk(&chunk, constant, 123);
 
-ListNode *new_node(const char * val) {
-    ListNode * cur_node = (ListNodePtr)malloc(sizeof(ListNode));
-    cur_node->prev = NULL;
-    cur_node->next = NULL;
-    cur_node->val = (char *)malloc(strlen(val) + 1);
-    strcpy(cur_node->val, val);
-    return cur_node;
-}
-
-int main() {
-    printf("Hello clox!\n");
-    return 0;
+  writeChunk(&chunk, OP_RETURN, 123);
+  disassembleChunk(&chunk, "test chunk");
+  freeChunk(&chunk);
+  return 0;
 }
