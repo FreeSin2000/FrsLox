@@ -17,20 +17,34 @@ typedef struct
     bool panicMode;
 } Parser;
 
+static int trace_indent = 0;
+
+#define PRECS          \
+    X(PREC_NONE)       \
+    X(PREC_ASSIGNMENT) \
+    X(PREC_COND)       \
+    X(PREC_OR)         \
+    X(PREC_AND)        \
+    X(PREC_EQUALITY)   \
+    X(PREC_COMPARISON) \
+    X(PREC_TERM)       \
+    X(PREC_FACTOR)     \
+    X(PREC_UNARY)      \
+    X(PREC_CALL)       \
+    X(PREC_PRIMARY)
+
 typedef enum
 {
-    PREC_NONE,
-    PREC_ASSIGNMENT, // =
-    PREC_OR,         // or
-    PREC_AND,        // and
-    PREC_EQUALITY,   // == !=
-    PREC_COMPARISON, // < > <= >=
-    PREC_TERM,       // + -
-    PREC_FACTOR,     // * /
-    PREC_UNARY,      // ! -
-    PREC_CALL,       // . ()
-    PREC_PRIMARY
+#define X(name) name,
+    PRECS
+#undef X
 } Precedence;
+
+const char *prec_names[] = {
+#define X(name) [name] = #name,
+    PRECS
+#undef X
+};
 
 typedef void (*ParseFn)();
 
@@ -159,6 +173,10 @@ static void parsePrecedence(Precedence precedence);
 
 static void binary()
 {
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent++;
+    printf("%*sbinary()\n", trace_indent << 2, "");
+#endif
     TokenType operatorType = parser.previous.type;
     ParseRule *rule = getRule(operatorType);
     parsePrecedence((Precedence)(rule->precedence + 1));
@@ -180,22 +198,44 @@ static void binary()
     default:
         return; // Unreachable.
     }
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent--;
+#endif
 }
 
 static void grouping()
 {
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent++;
+    printf("%*s->grouping()\n", trace_indent << 2, "");
+#endif
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent--;
+#endif
 }
 
 static void number()
 {
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent++;
+    printf("%*snumber()\n", trace_indent << 2, "");
+#endif
     double value = strtod(parser.previous.start, NULL);
     emitConstant(value);
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent--;
+#endif
 }
 
 static void unary()
 {
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent++;
+    printf("%*sunary()\n", trace_indent << 2, "");
+
+#endif
     TokenType operatorType = parser.previous.type;
 
     // Compile the operand.
@@ -210,6 +250,27 @@ static void unary()
     default:
         return; // Unreachable.
     }
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent--;
+#endif
+}
+
+static void conditional()
+{
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent++;
+    printf("%*sconditional()\n", trace_indent << 2, "");
+
+#endif
+    parsePrecedence(PREC_COND);
+
+    consume(TOKEN_COLON, "Expect ':'.");
+
+    parsePrecedence(PREC_COND);
+
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent--;
+#endif
 }
 
 ParseRule rules[] = {
@@ -224,6 +285,7 @@ ParseRule rules[] = {
     [TOKEN_SEMICOLON] = {NULL, NULL, PREC_NONE},
     [TOKEN_SLASH] = {NULL, binary, PREC_FACTOR},
     [TOKEN_STAR] = {NULL, binary, PREC_FACTOR},
+    [TOKEN_COND] = {NULL, conditional, PREC_COND},
     [TOKEN_BANG] = {NULL, NULL, PREC_NONE},
     [TOKEN_BANG_EQUAL] = {NULL, NULL, PREC_NONE},
     [TOKEN_EQUAL] = {NULL, NULL, PREC_NONE},
@@ -262,6 +324,10 @@ static ParseRule *getRule(TokenType type)
 
 static void parsePrecedence(Precedence precedence)
 {
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent++;
+    printf("%*sparsePrecedence(%s)\n", trace_indent << 2, "", prec_names[precedence]);
+#endif
     advance();
     ParseFn prefixRule = getRule(parser.previous.type)->prefix;
     if (prefixRule == NULL)
@@ -269,7 +335,6 @@ static void parsePrecedence(Precedence precedence)
         error("Expect expression.");
         return;
     }
-
     prefixRule();
 
     while (precedence <= getRule(parser.current.type)->precedence)
@@ -278,11 +343,21 @@ static void parsePrecedence(Precedence precedence)
         ParseFn infixRule = getRule(parser.previous.type)->infix;
         infixRule();
     }
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent--;
+#endif
 }
 
 static void expression()
 {
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent++;
+    printf("%*sexpression()\n", trace_indent << 2, "");
+#endif
     parsePrecedence(PREC_ASSIGNMENT);
+#ifdef DEBUG_TRACE_PARSE
+    trace_indent--;
+#endif
 }
 
 bool compile(const char *source, Chunk *chunk)
