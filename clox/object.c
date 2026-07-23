@@ -6,8 +6,8 @@
 #include "value.h"
 #include "vm.h"
 
-#define ALLOCATE_OBJ(type, objectType) \
-    (type *)allocateObject(sizeof(type), objectType)
+#define ALLOCATE_OBJ(type, objectType, arrayType, arraySize) \
+    (type *)allocateObject(sizeof(type) + arraySize, objectType)
 
 static Obj *allocateObject(size_t size, ObjType type)
 {
@@ -21,20 +21,18 @@ static Obj *allocateObject(size_t size, ObjType type)
 
 
 
-static ObjString *allocateString(char *chars, int length)
+static ObjString *allocateString(const char *chars, int length)
 {
-    ObjString *string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
+    ObjString *string = ALLOCATE_OBJ(ObjString, OBJ_STRING, char, (length + 1));
     string->length = length;
-    string->chars = chars;
+    memcpy(string->chars, chars, length);
+    string->chars[length] = '\0';
     return string;
 }
 
 ObjString *copyString(const char *chars, int length)
 {
-    char *heapChars = ALLOCATE(char, length + 1);
-    memcpy(heapChars, chars, length);
-    heapChars[length] = '\0';
-    return allocateString(heapChars, length);
+    return allocateString(chars, length);
 }
 
 ObjString *takeString(char *chars, int length)
