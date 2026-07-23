@@ -19,20 +19,25 @@ static Obj *allocateObject(size_t size, ObjType type)
     return object;
 }
 
-
-
-static ObjString *allocateString(const char *chars, int length)
+ObjString *copyString(const char *chars, int length)
 {
     ObjString *string = ALLOCATE_OBJ(ObjString, OBJ_STRING, char, (length + 1));
     string->length = length;
-    memcpy(string->chars, chars, length);
-    string->chars[length] = '\0';
+    string->isConstant = false;
+    memcpy(string->extra, chars, length);
+    string->extra[length] = '\0';
+    string->dynChars = string->extra;
+
     return string;
 }
 
-ObjString *copyString(const char *chars, int length)
+ObjString *constString(const char *chars, int length)
 {
-    return allocateString(chars, length);
+    ObjString *string = ALLOCATE_OBJ(ObjString, OBJ_STRING, char, 0);
+    string->length = length;
+    string->isConstant = true;
+    string->constChars = chars;
+    return string;
 }
 
 void printObject(Value value)
@@ -40,7 +45,7 @@ void printObject(Value value)
     switch (OBJ_TYPE(value))
     {
     case OBJ_STRING:
-        printf("%s", AS_CSTRING(value));
+        printf("%.*s", AS_STRING(value)->length, AS_CSTRING(value));
         break;
     }
 }
