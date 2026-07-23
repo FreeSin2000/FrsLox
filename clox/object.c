@@ -7,7 +7,7 @@
 #include "vm.h"
 
 #define ALLOCATE_OBJ(type, objectType, arrayType, arraySize) \
-    (type *)allocateObject(sizeof(type) + arraySize, objectType)
+    (type *)allocateObject(sizeof(type) + arraySize * sizeof(arrayType), objectType)
 
 static Obj *allocateObject(size_t size, ObjType type)
 {
@@ -31,11 +31,6 @@ static ObjString *allocateString(const char *chars, int length)
 }
 
 ObjString *copyString(const char *chars, int length)
-{
-    return allocateString(chars, length);
-}
-
-ObjString *takeString(char *chars, int length)
 {
     return allocateString(chars, length);
 }
